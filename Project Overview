@@ -1,0 +1,20 @@
+1.	Time implementation
+2.	Cosmic Ray Data from other sources
+  A.	Geostationary Satellite data from satellite that is right above the area where balloon has flown
+  B.	Neutron detector from local stations
+  C.	From flying planes
+  D.	ISS data
+3.	Several kinds for cosmic data
+  A.	Neutron Data
+  B.	Cosmic Ray Data
+  C.	Proton Data
+  D.	Magnetice field of Earth, Geomagnetic Index
+  E.	Muon Data
+4.	Sources
+  A.	ISS
+  B.	Goes Satellite Website, 
+      https://www.ngdc.noaa.gov/stp/solar/sateenvi.html#IMF, 
+      https://ngdc.noaa.gov/stp/satellite/goes/datanotes.html 
+  C.	http://www01.nmdb.eu, Neutron Monitor, 
+      http://cr0.izmiran.ru/SolarNeutronMonitoring/index.htm 
+  D.	Flying Plane Data
