@@ -1,0 +1,48 @@
+---
+title: "Dataset"
+author: "Hoik Jang"
+date: '2018 11 20 '
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+install.packages("RMySQL")
+library(RSQLite)
+library(RMySQL)
+```
+
+
+```{r}
+dcon <- dbConnect(MySQL(), user='admin1', password='wkd1478',dbname = 'reddit_db', host='10.98.75.10')
+
+res <- dbSendQuery(conn = dcon, "
+SELECT subreddit, count(*) as count
+FROM Sample_Data
+GROUP by subreddit
+order by count DESC
+;")
+
+list <- dbFetch(res, 100)
+dbClearResult(res)
+
+table<-as.data.frame(list)
+for (i in c(list$subreddit)){
+  
+query<-paste0("SELECT count(*) as count FROM (SELECT author
+FROM Sample_Data
+WHERE subreddit='AskReddit') as a
+INNER JOIN
+(SELECT author
+FROM Sample_Data
+WHERE subreddit='",i,"') as b
+ON a.author=b.author
+;'")
+res<-dbSendQuery(dcon, query)
+count<-dbFetch(res, -1)
+dbClearResult(res)
+num<-as.numeric(which(list$subreddit==i))
+list$correlation[[num]]<-round(as.numeric(count/(list$count[[num]]*list$count[[1]]))*1000,digits=2)
+}
+list
+```
