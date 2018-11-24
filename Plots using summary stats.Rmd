@@ -1,0 +1,47 @@
+---
+title: "Plots with Summary Statistics"
+author: "James Chen, Hoik Jang, Steven Oliver, and Adrian Perez"
+date: "November 20, 2018"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Summary
+
+This document has the code for running the plots from before using summary statistics
+
+
+## Plot 1: Comments by time of day:
+
+```{r}
+library(ggplot2)
+hour <- 0:23
+commentct <- rpois(24,1000)
+commentdf <- data.frame(hour,commentct)
+
+ggplot(commentdf)+
+  aes(x=hour,y=commentct,fill="red")+
+  geom_col()+
+  theme()
+```
+
+## Plot 2: Scatter plot of comments vs. subscribers for subreddits
+
+```{r}
+subreddit_id <- 1:100
+subscribers <- rpois(100,5000)
+comments <- subscribers*rpois(100,5)
+subreddit_metrics <- data.frame(subreddit_id,subscribers,comments)
+
+ggplot(subreddit_metrics)+
+  aes(x=subscribers,y=comments)+
+  geom_point()
+
+```
+
+
+
+
