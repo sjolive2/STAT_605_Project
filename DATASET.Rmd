@@ -17,24 +17,13 @@ library(dplyr)
 
 ```{r}
 dcon <- dbConnect(SQLite(), dbname ="D:/RDATA/reddit_db.db")
-#res <- dbSendQuery(conn = dcon, "
-#SELECT subredditname
-#FROM subreddits100
-#;")
-#list <- dbFetch(res, 100)
-#list$count<-0
-#dbClearResult(res)
 maxnum1<-1483228799
-#maxnum2<-0
-#countnum<-0
 query <- paste0("
 DROP TABLE subdata
 ;")
 res<-dbSendQuery(dcon, query)
 dbClearResult(res)
 
-#while(maxnum1>maxnum2){
-#  maxnum2<-maxnum1
 query <- paste0("
 CREATE TABLE subdata AS
 SELECT subreddit,author
@@ -55,21 +44,6 @@ res<-dbSendQuery(dcon, query)
 list<-as.data.frame(dbFetch(res, -1))
 dbClearResult(res)
 
-#for (i in c(list$subredditname)){
-#countnum<-countlist[names(countlist)==i][[1]]
-#num<-as.numeric(which(list$subredditname==i))
-#list$count[[num]]<-list$count[[num]]+countnum
-#countnum<-0
-#}
-#maxnum1
-#}
-#list
-
-#res<-dbSendQuery(dcon, query)
-#list$count1 <- dbFetch(res, 100)
-#dbClearResult(res)
-
-#table<-as.data.frame(list)
 list$correlation<-0
 for (i in c(list$subreddit)){
 query<-paste0("SELECT count(*) as count FROM (SELECT author
@@ -87,14 +61,7 @@ dbClearResult(res)
 num<-as.numeric(which(list$subreddit==i))
 list$correlation[[num]]<-round(as.numeric(count/(list$count[[num]]+list$count[[1]]))*10,digits=2)
 }
-#a<-filter(subdata, subreddit=="AskReddit" & author!="[deleted]")
-#list$Correlation<-0
-#for (i in list$Subreddit_Name){
-#b<-filter(subdata, subreddit==i & author!="[deleted]")
-#count<-count(merge(a,b, by.x="author", by.y = "author"))
-#num<-as.numeric(which(list$Subreddit_Name==i))
-#list$Correlation[[num]]<-round(as.numeric(count/(list$Counts[[num]]+list$Counts[[1]]))*10,digits=2)
-#}
+
 list
 write.csv(list, file = "D:/RDATA/2017_Jan_1.csv")
 ```
