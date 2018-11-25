@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.14159265-2.6-1.40.18 (TeX Live 2017/Debian) (preloaded format=pdflatex 2018.10.16)  24 NOV 2018 18:25
+This is pdfTeX, Version 3.14159265-2.6-1.40.18 (TeX Live 2017/Debian) (preloaded format=pdflatex 2018.10.16)  24 NOV 2018 18:50
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -741,7 +741,7 @@ Package hyperref Warning: Token not allowed in a PDF string (PDFDocEncoding):
 Package hyperref Warning: Token not allowed in a PDF string (PDFDocEncoding):
 (hyperref)                removing `\\' on input line 51.
 
-(./presentation_rice.aux)
+No file presentation_rice.aux.
 \openout1 = `presentation_rice.aux'.
 
 LaTeX Font Info:    Checking defaults for OML/cmm/m/it on input line 61.
@@ -759,7 +759,6 @@ LaTeX Font Info:    ... okay on input line 61.
 LaTeX Font Info:    Checking defaults for PD1/pdf/m/n on input line 61.
 LaTeX Font Info:    ... okay on input line 61.
 LaTeX Font Info:    Try loading font information for T1+phv on input line 61.
-
 (/usr/share/texlive/texmf-dist/tex/latex/psnfss/t1phv.fd
 File: t1phv.fd 2001/06/04 scalable font definitions for T1/phv.
 )
@@ -842,8 +841,6 @@ Package: gettitlestring 2016/05/16 v1.5 Cleanup title references (HO)
 LaTeX Info: Redefining \ref on input line 61.
 LaTeX Info: Redefining \pageref on input line 61.
 LaTeX Info: Redefining \nameref on input line 61.
-
-(./presentation_rice.out) (./presentation_rice.out)
 \@outlinefile=\write5
 \openout5 = `presentation_rice.out'.
 
@@ -999,11 +996,7 @@ Type  H <return>  for immediate help.
                                                   
 l.166 \end{frame}
                  
-I could not locate the file with any of these extensions:
-.pdf,.png,.jpg,.mps,.jpeg,.jbig2,.jb2,.PDF,.PNG,.JPG,.JPEG,.JBIG2,.JB2,.eps
-Try typing  <return>  to proceed.
-If that doesn't work, type  X <return>  to quit.
-
+? 
 [15
 
 ]
@@ -1076,14 +1069,24 @@ Package atveryend Info: Empty hook `AfterLastShipout' on input line 287.
  (./presentation_rice.aux)
 Package atveryend Info: Executing hook `AtVeryEndDocument' on input line 287.
 Package atveryend Info: Executing hook `AtEndAfterFileList' on input line 287.
-Package rerunfilecheck Info: File `presentation_rice.out' has not changed.
-(rerunfilecheck)             Checksum: 4445D6DD59E06910A2B8DE09604DAC02;797.
+
+
+Package rerunfilecheck Warning: File `presentation_rice.out' has changed.
+(rerunfilecheck)                Rerun to get outlines right
+(rerunfilecheck)                or use package `bookmark'.
+
+Package rerunfilecheck Info: Checksums for `presentation_rice.out':
+(rerunfilecheck)             Before: <no file>
+(rerunfilecheck)             After:  4445D6DD59E06910A2B8DE09604DAC02;797.
+
+LaTeX Warning: Label(s) may have changed. Rerun to get cross-references right.
+
  ) 
 Here is how much of TeX's memory you used:
- 18334 strings out of 492982
- 345121 string characters out of 6134895
- 424158 words of memory out of 5000000
- 21336 multiletter control sequences out of 15000+600000
+ 18313 strings out of 492982
+ 344772 string characters out of 6134895
+ 423884 words of memory out of 5000000
+ 21321 multiletter control sequences out of 15000+600000
  94432 words of font info for 134 fonts, out of 8000000 for 9000
  1141 hyphenation exceptions out of 8191
  56i,16n,59p,784b,637s stack positions out of 5000i,500n,10000p,200000b,80000s
@@ -1101,10 +1104,10 @@ re/texlive/texmf-dist/fonts/type1/urw/helvetic/uhvro8a.pfb></usr/share/texlive/
 texmf-dist/fonts/type1/urw/symbol/usyr.pfb></usr/share/texlive/texmf-dist/fonts
 /type1/urw/times/utmr8a.pfb></usr/share/texlive/texmf-dist/fonts/type1/urw/time
 s/utmri8a.pfb>
-Output written on presentation_rice.pdf (23 pages, 165410 bytes).
+Output written on presentation_rice.pdf (23 pages, 164373 bytes).
 PDF statistics:
- 812 PDF objects out of 1000 (max. 8388607)
- 739 compressed objects within 8 object streams
+ 768 PDF objects out of 1000 (max. 8388607)
+ 696 compressed objects within 7 object streams
  62 named destinations out of 1000 (max. 500000)
- 256 words of extra memory for PDF output out of 10000 (max. 10000000)
+ 144 words of extra memory for PDF output out of 10000 (max. 10000000)
 
