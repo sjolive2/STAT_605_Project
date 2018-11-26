@@ -6,44 +6,44 @@
 \headcommand {\beamer@subsectionpages {1}{2}}
 \headcommand {\sectionentry {1}{Background}{3}{Background}{0}}
 \headcommand {\beamer@subsectionpages {3}{2}}
-\headcommand {\beamer@subsectionentry {0}{1}{1}{3}{Motivation}}
-\headcommand {\slideentry {1}{1}{1}{3/3}{Motivation}{0}}
-\headcommand {\beamer@framepages {3}{3}}
-\headcommand {\beamer@subsectionpages {3}{3}}
-\headcommand {\beamer@subsectionentry {0}{1}{2}{4}{What is Reddit?}}
-\headcommand {\slideentry {1}{2}{1}{4/8}{What is Reddit?}{0}}
-\headcommand {\beamer@framepages {4}{8}}
-\headcommand {\beamer@subsectionpages {4}{8}}
-\headcommand {\beamer@subsectionentry {0}{1}{3}{9}{Memes}}
-\headcommand {\slideentry {1}{3}{1}{9/9}{Memes}{0}}
+\headcommand {\beamer@subsectionentry {0}{1}{1}{3}{Reddit}}
+\headcommand {\slideentry {1}{1}{1}{3/8}{Reddit}{0}}
+\headcommand {\beamer@framepages {3}{8}}
+\headcommand {\beamer@subsectionpages {3}{8}}
+\headcommand {\beamer@subsectionentry {0}{1}{2}{9}{Memes}}
+\headcommand {\slideentry {1}{2}{1}{9/9}{Memes}{0}}
 \headcommand {\beamer@framepages {9}{9}}
 \headcommand {\beamer@subsectionpages {9}{9}}
-\headcommand {\beamer@subsectionentry {0}{1}{4}{10}{Study Overview}}
-\headcommand {\slideentry {1}{4}{1}{10/10}{Study Overview}{0}}
+\headcommand {\beamer@subsectionentry {0}{1}{3}{10}{Motivation and Objectives}}
+\headcommand {\slideentry {1}{3}{1}{10/10}{Motivation and Objectives}{0}}
 \headcommand {\beamer@framepages {10}{10}}
-\headcommand {\beamer@sectionpages {3}{10}}
 \headcommand {\beamer@subsectionpages {10}{10}}
-\headcommand {\sectionentry {2}{Objectives}{11}{Objectives}{0}}
-\headcommand {\beamer@subsectionpages {11}{10}}
-\headcommand {\beamer@subsectionentry {0}{2}{1}{11}{TITLE}}
-\headcommand {\slideentry {2}{1}{1}{11/13}{TITLE}{0}}
-\headcommand {\beamer@framepages {11}{13}}
-\headcommand {\beamer@sectionpages {11}{13}}
-\headcommand {\beamer@subsectionpages {11}{13}}
-\headcommand {\sectionentry {3}{Results}{14}{Results}{0}}
-\headcommand {\beamer@subsectionpages {14}{13}}
-\headcommand {\beamer@subsectionentry {0}{3}{1}{14}{Figure}}
-\headcommand {\slideentry {3}{1}{1}{14/14}{Figure}{0}}
-\headcommand {\beamer@framepages {14}{14}}
-\headcommand {\beamer@sectionpages {14}{14}}
-\headcommand {\beamer@subsectionpages {14}{14}}
-\headcommand {\sectionentry {4}{Conclusion}{15}{Conclusion}{0}}
-\headcommand {\beamer@subsectionpages {15}{14}}
-\headcommand {\beamer@subsectionentry {0}{4}{1}{15}{SUBSECTION NAME}}
-\headcommand {\slideentry {4}{1}{1}{15/15}{SUBSECTION NAME}{0}}
-\headcommand {\beamer@framepages {15}{15}}
-\headcommand {\beamer@partpages {1}{15}}
-\headcommand {\beamer@subsectionpages {15}{15}}
-\headcommand {\beamer@sectionpages {15}{15}}
-\headcommand {\beamer@documentpages {15}}
+\headcommand {\beamer@subsectionentry {0}{1}{4}{11}{Study Overview}}
+\headcommand {\slideentry {1}{4}{1}{11/11}{Study Overview}{0}}
+\headcommand {\beamer@framepages {11}{11}}
+\headcommand {\beamer@sectionpages {3}{11}}
+\headcommand {\beamer@subsectionpages {11}{11}}
+\headcommand {\sectionentry {2}{Objectives}{12}{Objectives}{0}}
+\headcommand {\beamer@subsectionpages {12}{11}}
+\headcommand {\beamer@subsectionentry {0}{2}{1}{12}{TITLE}}
+\headcommand {\slideentry {2}{1}{1}{12/15}{TITLE}{0}}
+\headcommand {\beamer@framepages {12}{15}}
+\headcommand {\beamer@sectionpages {12}{15}}
+\headcommand {\beamer@subsectionpages {12}{15}}
+\headcommand {\sectionentry {3}{Results}{16}{Results}{0}}
+\headcommand {\beamer@subsectionpages {16}{15}}
+\headcommand {\beamer@subsectionentry {0}{3}{1}{16}{Figure}}
+\headcommand {\slideentry {3}{1}{1}{16/16}{Figure}{0}}
+\headcommand {\beamer@framepages {16}{16}}
+\headcommand {\beamer@sectionpages {16}{16}}
+\headcommand {\beamer@subsectionpages {16}{16}}
+\headcommand {\sectionentry {4}{Conclusion}{17}{Conclusion}{0}}
+\headcommand {\beamer@subsectionpages {17}{16}}
+\headcommand {\beamer@subsectionentry {0}{4}{1}{17}{SUBSECTION NAME}}
+\headcommand {\slideentry {4}{1}{1}{17/17}{SUBSECTION NAME}{0}}
+\headcommand {\beamer@framepages {17}{17}}
+\headcommand {\beamer@partpages {1}{17}}
+\headcommand {\beamer@subsectionpages {17}{17}}
+\headcommand {\beamer@sectionpages {17}{17}}
+\headcommand {\beamer@documentpages {17}}
 \headcommand {\gdef \inserttotalframenumber {9}}
