@@ -18,60 +18,38 @@ library(stringr)
 
 ```{r}
 dcon <- dbConnect(SQLite(), dbname ="D:/RDATA/reddit_db.db")
-#res <- dbSendQuery(conn = dcon, "
-#SELECT subredditname
-#FROM subreddits100
-#;")
-#list <- dbFetch(res, 100)
-#list$count<-0
 #dbClearResult(res)
-#maxnum1<-1483228799
-#maxnum2<-0
-#countnum<-0
+maxnum1<-1483228799
+
 #query <- paste0("
 #DROP TABLE subdata
 #;")
 #res<-dbSendQuery(dcon, query)
 #dbClearResult(res)
 
-#while(maxnum1>maxnum2){
-#  maxnum2<-maxnum1
-#query <- paste0("
-#CREATE TABLE subdata AS
-#SELECT subreddit,author
-#FROM RC17_01
-#WHERE created_utc>",maxnum1,"
-#;")
-#res<-dbSendQuery(dcon, query)
-#dbClearResult(res)
 
-#query <- paste0("
-#SELECT subreddit, count(*) as count
-#FROM subdata
-#GROUP BY subreddit
-#ORDER BY count DESC
-#LIMIT 100
-#;")
-#res<-dbSendQuery(dcon, query)
-#list<-as.data.frame(dbFetch(res, -1))
-#dbClearResult(res)
+query <- paste0("
+CREATE TABLE subdata AS
+SELECT subreddit,author
+FROM RC17_01
+WHERE created_utc>",maxnum1,"
+;")
+res<-dbSendQuery(dcon, query)
+dbClearResult(res)
 
-#for (i in c(list$subredditname)){
-#countnum<-countlist[names(countlist)==i][[1]]
-#num<-as.numeric(which(list$subredditname==i))
-#list$count[[num]]<-list$count[[num]]+countnum
-#countnum<-0
-#}
-#maxnum1
-#}
-#list
+query <- paste0("
+SELECT subreddit, count(*) as count
+FROM subdata
+GROUP BY subreddit
+ORDER BY count DESC
+LIMIT 100
+;")
+res<-dbSendQuery(dcon, query)
+list<-as.data.frame(dbFetch(res, -1))
+dbClearResult(res)
 
-#res<-dbSendQuery(dcon, query)
-#list$count1 <- dbFetch(res, 100)
-#dbClearResult(res)
 
-#table<-as.data.frame(list)
-#list$correlation<-0
+list$correlation<-0
 for (i in list$subreddit){
 query<-paste0("SELECT count(*) as count FROM (SELECT author
 FROM subdata
@@ -87,76 +65,68 @@ count<-dbFetch(res, -1)
 dbClearResult(res)
 num<-as.numeric(which(list$subreddit==i))
 list$correlation_MMA[[num]]<-round(as.numeric(count/(list$count[[num]]+list$count[[which(list$subreddit=='MMA')]]))*10,digits=2)
-}
-#a<-filter(subdata, subreddit=="AskReddit" & author!="[deleted]")
-#list$Correlation<-0
-#for (i in list$Subreddit_Name){
-#b<-filter(subdata, subreddit==i & author!="[deleted]")
-#count<-count(merge(a,b, by.x="author", by.y = "author"))
-#num<-as.numeric(which(list$Subreddit_Name==i))
-#list$Correlation[[num]]<-round(as.numeric(count/(list$Counts[[num]]+list$Counts[[1]]))*10,digits=2)
-#}
 
-#query <- paste0("
-#SELECT body, subreddit
-#FROM RC17_01
-#WHERE created_utc>",maxnum1," AND subreddit IN('AskReddit','politics', 'nfl', 'The_Donald', 'news', #'RocketLeagueExchange' , 'worldnews', 'nba', 'CFB', 'pics', 'funny', 'leagueoflegends', 'Overwatch','videos',   #'SquaredCircle', 'hockey', 'gaming', 'todayilearned', 'pcmasterrace',          'soccer',  
-# 'Showerthoughts',        'movies',   'gifs',     'GlobalOffensive',      
-# 'NintendoSwitch',        'relationships'  ,       'DotA2',    'MMA',     
-# 'pokemontrades'     ,    'FIFA',     'anime',    'AdviceAnimals'  ,      
-# 'conspiracy'  ,          'IAmA',     'wow',      'WTF',     
-#'aww',      '2007scape','Cricket',  'teenagers'    ,        
-# 'hearthstone'     ,      'mildlyinteresting' ,    'personalfinance'   ,    'buildapc',
-#'gonewild', 'Games',    'Pokemongiveaway'  ,     'GlobalOffensiveTrade' ,
-# 'DestinyTheGame'    ,    'technology'  ,          'magicTCG', 'europe',  
-# 'xboxone',  'FFBraveExvius' ,        'trees',    'StarWars',
-# 'explainlikeimfive'   ,  'television'    ,        'BlackPeopleTwitter' ,   'AskMen',  
-# 'Smite',    'canada',   'Fitness',  'hiphopheads',          
-# 'TwoXChromosomes',       'pathofexile'  ,         'Futurology' ,           'CringeAnarchy'   ,     
-# 'pokemongo','india',    'EnoughTrumpSpam' ,      'OkCupid', 
-# 'Rainbow6', 'ukpolitics'  ,          'PS4',      'CollegeBasketball'  ,  
-#'battlefield_one'  ,     'ClashRoyale'    ,       'AskWomen', 'unitedkingdom'   ,     
-#'streetwear'      ,      'Jokes',    'cars',     'pokemon', 
-# 'Android',  'NHLHUT',   'heroesofthestorm'  ,    'bindingofisaac' ,      
-#'jailbreak','legaladvice'   ,        'Random_Acts_Of_Amazon', 'baseball',
-# 'RoastMe',  'LifeProTips'    ,       'thedivision'    ,       'atheism', 
-# 'Eve',      'ffxiv',    'Music',    'Warframe' )
-#;")
-#res<-dbSendQuery(dcon, query)
-#data<-as.data.frame(dbFetch(res, -1))
-#dbClearResult(res)
-#write.csv(data, file = "D:/RDATA/2017_Jan_Body.csv")
+}
+
+query <- paste0("
+SELECT body, subreddit
+FROM RC17_01
+WHERE created_utc>",maxnum1," AND subreddit IN('AskReddit','politics', 'nfl', 'The_Donald', 'news', 'RocketLeagueExchange' , 'worldnews', 'nba', 'CFB', 'pics', 'funny', 'leagueoflegends', 'Overwatch','videos',   'SquaredCircle', 'hockey', 'gaming', 'todayilearned', 'pcmasterrace',          'soccer',  
+ 'Showerthoughts',        'movies',   'gifs',     'GlobalOffensive',      
+ 'NintendoSwitch',        'relationships'  ,       'DotA2',    'MMA',     
+ 'pokemontrades'     ,    'FIFA',     'anime',    'AdviceAnimals'  ,      
+ 'conspiracy'  ,          'IAmA',     'wow',      'WTF',     
+'aww',      '2007scape','Cricket',  'teenagers'    ,        
+ 'hearthstone'     ,      'mildlyinteresting' ,    'personalfinance'   ,    'buildapc',
+'gonewild', 'Games',    'Pokemongiveaway'  ,     'GlobalOffensiveTrade' ,
+ 'DestinyTheGame'    ,    'technology'  ,          'magicTCG', 'europe',  
+ 'xboxone',  'FFBraveExvius' ,        'trees',    'StarWars',
+ 'explainlikeimfive'   ,  'television'    ,        'BlackPeopleTwitter' ,   'AskMen',  
+ 'Smite',    'canada',   'Fitness',  'hiphopheads',          
+ 'TwoXChromosomes',       'pathofexile'  ,         'Futurology' ,           'CringeAnarchy'   ,     
+ 'pokemongo','india',    'EnoughTrumpSpam' ,      'OkCupid', 
+ 'Rainbow6', 'ukpolitics'  ,          'PS4',      'CollegeBasketball'  ,  
+'battlefield_one'  ,     'ClashRoyale'    ,       'AskWomen', 'unitedkingdom'   ,     
+'streetwear'      ,      'Jokes',    'cars',     'pokemon', 
+ 'Android',  'NHLHUT',   'heroesofthestorm'  ,    'bindingofisaac' ,      
+'jailbreak','legaladvice'   ,        'Random_Acts_Of_Amazon', 'baseball',
+ 'RoastMe',  'LifeProTips'    ,       'thedivision'    ,       'atheism', 
+ 'Eve',      'ffxiv',    'Music',    'Warframe' )
+;")
+res<-dbSendQuery(dcon, query)
+data<-as.data.frame(dbFetch(res, -1))
+dbClearResult(res)
+write.csv(data, file = "D:/RDATA/2017_Jan_Body.csv")
 #data<-read.csv("2017_Jan_Body.csv")
-#newdf <-transmute(data,subreddit,
+newdf <-transmute(data,subreddit,
                    #ovfefe = str_detect(df$body,("[Cc]ovfefe")), #June
                    # try str_detect(df$body,ignore.case("covfefe"))
                    #metoo = str_detect(df$body,"[Mm](e ?Too|e ?too)"), #October
                    #RickMorty = str_detect(df$body,"you have to have a very high IQ"),#July
-                   #Danielle = str_detect(data$body,"([Cc]ash ?[mM]e|[Hh][Oo][Ww] ?[Bb][oO][Ww]?[Uu]?[Tt]?)"), #January
+                   Danielle = str_detect(data$body,"([Cc]ash ?[mM]e|[Hh][Oo][Ww] ?[Bb][oO][Ww]?[Uu]?[Tt]?)"), #January
                    #TrumpTrade = str_detect(df$body,"has been the worst trade deal"), #March/April
-                   #LuckyLuciano = str_detect(data$body,"had to do it to '?em"),#January
+                   LuckyLuciano = str_detect(data$body,"had to do it to '?em"),#January
                    #Despacito = str_detect(df$body,"[Dd]espacito"),#July
-                   #Dankstorm = str_detect(data$body,"([Dd]arude|[Ss]arude)"),#any month
-                   #RickRoll = str_detect(data$body,"h?t?t?p?s?:?/?/?www.youtube.com/watch?v=dQw4w9WgXcQ"),#any month
-#)
+                   Dankstorm = str_detect(data$body,"([Dd]arude|[Ss]arude)"),#any month
+                   RickRoll = str_detect(data$body,"h?t?t?p?s?:?/?/?www.youtube.com/watch?v=dQw4w9WgXcQ"),#any month
+)
 
-#meme1<-as.data.frame(table(data$subreddit[newdf$Danielle]))
-#meme2<-as.data.frame(table(data$subreddit[newdf$LuckyLuciano]))
-#meme3<-as.data.frame(table(data$subreddit[newdf$Dankstorm]))
-#meme4<-as.data.frame(table(data$subreddit[newdf$RickRoll]))
+meme1<-as.data.frame(table(data$subreddit[newdf$Danielle]))
+meme2<-as.data.frame(table(data$subreddit[newdf$LuckyLuciano]))
+meme3<-as.data.frame(table(data$subreddit[newdf$Dankstorm]))
+meme4<-as.data.frame(table(data$subreddit[newdf$RickRoll]))
 
 
 
 #list<-as.data.frame(read.csv("2017_Jan_1.csv"))
 #list$subreddit
-#for (i in list$subreddit){
-#list$meme1[[which(list$subreddit==i)]]<-as.numeric(meme1$Freq[[which(meme1$Var1==i)]])
-#list$meme2[[which(list$subreddit==i)]]<-as.numeric(meme2$Freq[[which(meme2$Var1==i)]])
-#list$meme3[[which(list$subreddit==i)]]<-as.numeric(meme3$Freq[[which(meme3$Var1==i)]])
-#list$meme4[[which(list$subreddit==i)]]<-as.numeric(meme4$Freq[[which(meme4$Var1==i)]])
-#}
+for (i in list$subreddit){
+list$meme1[[which(list$subreddit==i)]]<-as.numeric(meme1$Freq[[which(meme1$Var1==i)]])
+list$meme2[[which(list$subreddit==i)]]<-as.numeric(meme2$Freq[[which(meme2$Var1==i)]])
+list$meme3[[which(list$subreddit==i)]]<-as.numeric(meme3$Freq[[which(meme3$Var1==i)]])
+list$meme4[[which(list$subreddit==i)]]<-as.numeric(meme4$Freq[[which(meme4$Var1==i)]])
+}
 write.csv(list, file = "D:/RDATA/2017_Jan_MEME_1.csv")
-list$count
 
 
 
