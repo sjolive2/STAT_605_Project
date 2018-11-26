@@ -1,0 +1,203 @@
+---
+title: "HW 11"
+author: "James Chen, Hoik Jang, Steven Oliver, and Adrian Perez"
+date: "November 15, 2018"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+```
+
+##Combining old plots
+In the last two weeks, we investigated the relative frequency of certain netspeak words in Reddit and in 4chan. This week, we take the natural step of showing them side by side.
+
+```{r}
+#we first load the data from previous weeks back into R
+library(RSQLite)
+library(grid)
+library(gridBase)
+```
+
+```{r}
+#isolating SQL queries to disable them when compiling document
+dcon <- dbConnect(SQLite(), dbname = "D:\\Rice\\Fall 2018\\STAT 605\\Project\\Reddit\\reddit_db.db")
+a4chan <- dbGetQuery(dcon,"SELECT * FROM a_4chan")
+reddit <- dbGetQuery(dcon,"SELECT * FROM RC17_12_01;")
+
+
+# The following code is the same as dbgetQuery(dcon,"SELECT * FROM RC17_12_01;")
+# but is useful for pulling only a certain number of lines from the table (see the SQL lecture for details)
+#
+#res <- dbSendQuery(conn = dcon, "SELECT * FROM RC17_12_01;")
+#reddit <- dbFetch(res,100)
+#dbClearResult(res)
+```
+
+```{r}
+library(dplyr)
+library(stringr)
+
+#generating counts (revised from HW 10 to save memory)
+word <- c("lol","lul","kappa","rip","lmao","wtf")
+counts <- rep(0,length(word))
+counts[1] <- sum(str_detect(a4chan$bodytext,"[Ll](ol|OL)"))
+counts[2] <- sum(str_detect(a4chan$bodytext,"[Ll](ul|UL)"))
+counts[3] <- sum(str_detect(a4chan$bodytext,"[Kk]appa"))
+counts[4] <- sum(str_detect(a4chan$bodytext,"[Rr](ip|IP)"))
+counts[5] <- sum(str_detect(a4chan$bodytext,"[Ll][Ff]?(mao|MAO)"))
+counts[6] <- sum(str_detect(a4chan$bodytext,"(WTF|wtf)"))
+counta4chan <- data.frame(word,counts,stringsAsFactors = FALSE)
+
+
+
+word <- c("lol","lul","kappa","rip","lmao","wtf")
+counts <- rep(0,length(word))
+counts[1] <- sum(str_detect(reddit$body,"[Ll](ol|OL)"))
+counts[2] <- sum(str_detect(reddit$body,"[Ll](ul|UL)"))
+counts[3] <- sum(str_detect(reddit$body,"[Kk]appa"))
+counts[4] <- sum(str_detect(reddit$body,"[Rr](ip|IP)"))
+counts[5] <- sum(str_detect(reddit$body,"[Ll][Ff]?(mao|MAO)"))
+counts[6] <- sum(str_detect(reddit$body,"(WTF|wtf)"))
+countreddit <- data.frame(word,counts,stringsAsFactors = FALSE)
+
+```
+
+Again, we are limited because of the small sample size, as we weren't able to get the scraping of 4chan done on the desktop we'd set up as a server over the weekend. However, it is interesting to see that lmao, lol, and rip are the most prominent examples of netspeak on both Reddit and 4chan, while the other three are much more obscure.
+
+```{r}
+library(ggplot2)
+#making new double plot
+grid.newpage()
+
+vp1 <- viewport(x = 0.5, y = 0.5, w = 1, h = 0.5,
+                just = c("center", "bottom"))
+vp2 <- viewport(x = 0.5, y = 0.5, w = 1, h = 0.5,
+                just = c("center", "top"))
+
+p1 <- ggplot(countreddit)+
+  aes(x=word,y=counts,fill=word)+
+  geom_col()+
+  labs(fill = "Netspeak word",title = "Netspeak word counts in Reddit comments (12/01/2017)")
+
+
+p2 <- ggplot(counta4chan)+
+  aes(x=word,y=counts,fill=word)+
+  geom_col()+
+  labs(fill = "Netspeak word",title = "Netspeak word counts in selected 4chan comments (12/01/2017)")
+
+print(p1,vp=vp1)
+print(p2,vp=vp2)
+```
+
+
+
+## Grid for inset plot
+
+Recall that from homework 8, we showed the following histogram plot of the distribution of subscriber counts for the top 1000 subreddits.
+
+```{r}
+#need to regenerate subreddit subscriber histogram for top 1000
+
+subreddits1000 <- dbGetQuery(dcon,"select * from subreddits1000")
+```
+
+
+```{r}
+library(knitr)
+summary(subreddits1000$numberofsubscribers)
+subctpl <- ggplot(subreddits1000)+
+  aes(x=numberofsubscribers,fill="red")+
+  geom_histogram(binwidth=0.1)+
+  scale_x_log10()+
+  labs(title="Distribution of subscriber counts for top 1000 subreddits", x = "Subscribers + 1", y = "Count")+
+  theme(legend.position = "none")
+print(subctpl)
+```
+
+
+To update this plot, we decided to inset a scatterplot of the number of comments made on 12/01/2017 vs. the number of subscribers. We plotted this data with log scales because of the skewness of the data. The most interesting feature we observe here is that, as we previously discussed, there seems to be two groupings of subreddits, the regular ones and the top 100 subreddits that are the defaults.
+
+```{r,eval}
+#need to generate scatterplot of comments vs. subscribers
+##SQL query to count number of posts per subreddit
+subreddits100commentct <- dbGetQuery(dcon," SELECT c.subredditname,c.numberofsubscribers,commentcts.commentct FROM
+                                      
+subreddits100 as c LEFT JOIN
+(SELECT subreddit_id,count(link_id) as commentct FROM                                                               (
+                                      SELECT a.subreddit_id,b.link_id 
+                                      FROM subreddits100 as a INNER JOIN RC17_ as b
+                                      WHERE a.subreddit_id=b.subreddit_id
+                                      ) as temp 
+                                      GROUP BY subreddit_id) as commentcts 
+  WHERE commentcts.subreddit_id = c.subreddit_id
+                                      ")
+```
+
+```{r}
+##then plot inset 
+
+subvscomm <- ggplot(subreddits1000commentct)+
+  aes(x=numberofsubscribers,y=commentct,col=I("darkgreen"))+
+  geom_point()+
+  scale_x_log10()+scale_y_log10()+
+  labs(title= "Subscribers vs. user comments for top 1000 subreddits",
+       x="Subscribers", y= "Comments")
+
+#print(subvscomm)
+
+grid.newpage()
+vpmain <- viewport(x=0.5,y=0.5)
+#showViewport(vpmain)
+pushViewport(vpmain)
+vpmini <- viewport(0.7,0.7,height=0.45,width=0.6,just = c("center","center"))
+#showViewport(vpmini)
+print(subctpl,vp=vpmain)
+print(subvscomm,vp=vpmini)
+
+```
+
+
+## Grid for replicating plot
+
+Here is a base Grid version of the new scatterplot we designed for the inset.
+
+```{r}
+
+log10scatter <- function(xdata,ydata,plottitle,xlabel,ylabel){
+  datasize <- length(xdata)
+  logxdata <- log10(xdata)
+  logydata <- log10(ydata)
+  logxrange <- range(logxdata)
+  logxscale <- logxrange+c(-1,1)*diff(logxrange)*0.05
+  logyrange <- range(logydata)
+  logyscale <- logyrange+c(-1,1)*diff(logyrange)*0.05
+  
+  grid.newpage()
+  pushViewport(plotViewport(c(5.1, 4.1, 4.1, 2.1),
+                            xscale = logxscale,
+                            yscale=logyscale))
+  grid.rect()
+  grid.xaxis()
+  grid.yaxis()
+
+  grid.points(logxdata,logydata,pch=16,size = unit(0.3,"lines"))
+  #labels
+  grid.text(paste0("Log of ",ylabel), x = unit(-3, "lines"), rot = 90)
+  grid.text(paste0("Log of ",xlabel), y = unit(-3, "lines"))
+  grid.text(plottitle, y = 1.1,
+          gp = gpar(fontface = "bold", cex = 1.2))
+}
+
+log10scatter(subreddits1000commentct$numberofsubscribers,subreddits1000commentct$commentct,"Subscribers vs. Comment Count","Subscriber Count","Comments")
+
+
+```
+
+##Killer plot proposal
+
+Below you can see the basic mock-up of our killer plot. The main innovative feature is the color/size scaling to denote the length of the text of a meme, on top of the information presented by a regular scatterplot. We have an alternative in mind if this is too simple, but it seems to us to be a relatively simple and effective plot.
+
+```{r, echo=FALSE, out.width = '100%'}
+knitr::include_graphics("killerplot.png")
+```

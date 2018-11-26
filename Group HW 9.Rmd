@@ -1,0 +1,136 @@
+---
+title: "Homework 9"
+author: "James Chen"
+date: "October 31, 2018"
+output: pdf_document
+---
+
+```{r setup,echo=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+
+library(RSQLite)
+library(dplyr)
+library(jsonlite)
+
+
+jsondump <- function(inputconn,exportconn,tablename,pagesize=5000,overwrite=FALSE,append=FALSE){
+  if((overwrite&&append) == TRUE){
+    stop("Cannot use both overwrite and append at the same time!")
+  }
+
+  #deleting table if it previously exists and overwrite is enabled
+  #throwing error if neither append nor overwrite is enabled and the table already exists
+  if(dbExistsTable(exportconn,tablename)){
+    if(overwrite==TRUE){
+      dbRemoveTable(exportconn,tablename)
+    }else if(append==FALSE){
+      stop("Table already exists!")
+    }
+  }
+  
+  #streaming in json and exporting data to table using exportfunc
+  stream_in(inputconn,handler=function(df){
+    dbWriteTable(exportconn,tablename,df,append = TRUE,overwrite=FALSE,pagesize=pagesize) 
+  })
+
+}
+```
+
+
+#Introduction
+
+This week, we were able to load monthly JSON data through the stream_in function from jsonlite directly into our SQL database to avoid the memory issue. However, for the text mining part of our project for the group homework, we decided to work with a single day of data so we could easily manipulate it in R. For now, we’re going to keep working on the daily data to prototype our methods, since they’re still large enough to be fairly representative of typical Reddit activity.  Adapting our analysis to the monthly data sets should only require minor tweaking to process the data in manageable chunks through a loop.
+
+
+```{r}
+#loading data into database:
+
+infile <-  file("D:\\Rice\\Fall 2018\\STAT 605\\Project\\Reddit\\RC_2017-12-01.json")
+open(infile)
+dcon <- dbConnect(SQLite(), dbname = "D:\\Rice\\Fall 2018\\STAT 605\\Project\\Reddit\\reddit_db.db")
+
+#####
+# If you get "Error: Columns `author_cakeday` not found", 
+# try running this code first to delete the table and then try again
+#
+#dbSendQuery(dcon,"DROP TABLE RC17_12_01;")
+#
+#
+```
+
+```{r,eval=FALSE}
+jsondump(infile,dcon,"RC17_12_01",overwrite=TRUE,pagesize = 100000)
+
+```
+
+
+##Netspeak frequency
+
+We began our analysis of the reddit comments by using regular expression and stringr to count the number of times popular "netspeak" was used in a comment. We started with the simple case of netspeak lingo due to the ease of implementation with our data and to practice extracting strings before we tackle more complicated information. The end goal of our project is to implement similar code to search for popular memes and copypasta and to explore their propagation throughout reddit over time. 
+
+Note that these were found out of a total of about 3 million comments.
+
+```{r,eval}
+#importing data from SQL into R
+df <- dbGetQuery(dcon,"SELECT * FROM RC17_12_01;")
+
+#using regex to search for common netspeak lingo and their variants
+library(stringr)
+
+newdf <- transmute(df,id,
+                   lol = str_detect(df$body,"[Ll](ol|OL)"),
+                   lul = str_detect(df$body,"[Ll](ul|UL)"),
+                   kappa = str_detect(df$body,"[Kk]appa"),
+                   rip = str_detect(df$body,"[Rr](ip|IP)"),
+                   lmao = str_detect(df$body,"[Ll][Ff]?(mao|MAO)"),
+                   wtf = str_detect(df$body,"(WTF|wtf)")
+                   )
+
+#code used to check number of matches for a regex and their context:
+#testdf2 <- filter(df,str_detect(df$body,"[Ll][Ff]?(mao|MAO)"))
+
+```
+
+
+```{r,eval=FALSE}
+if(dbExistsTable(dcon,"netspeak_check")){
+  dbRemoveTable(dcon,"netspeak_check")
+}
+dbWriteTable(dcon,"netspeak_check",newdf)
+dbDisconnect(dcon)
+
+```
+
+The table below shows “lol” was the most frequently used phrase in our list of comments, but we can see that the new “lul” phrase with identical meaning is also seeing some use on reddit. We can also compare that to the popular phrase “lmao” which also conveys the same information. An interesting direction to take this knowledge for our project will be to explore how the frequency of the use of these phrases has changed over time as a way of visualizing the rise in popularity of new netspeak such as “lul”. Another interesting observation in the table is the surprising amount of the use of “RIP”. We also looked at “wtf” and “kappa” (new lingo that means sarcasm”) and will expand our analysis to several other popular phrases for our project.
+
+
+```{r}
+library(tidyverse)
+wordcounts <- newdf%>%
+        summarise(lol = sum(lol),
+                  lul= sum(lul),
+                  kappa = sum(kappa),
+                  rip = sum(rip),
+                  lmao = sum(lmao),
+                  wtf = sum(wtf))%>%
+  gather(key="word",value="counts")
+
+ggplot(wordcounts)+
+  aes(x=word,y=counts,fill=word)+
+  geom_col()+
+  labs(fill = "Netspeak word",title = "Netspeak word counts in Reddit comments (12/01/2017)")
+
+```
+
+
+In addition to our netspeak analysis, we also wanted to visualize user activity on reddit on an hourly basis. We see a peak at 3pm (UTC), a second (smaller) peak at 2am (UTC). Since these match up to 11 am EST and 10 pm EST, this corresponds to peak usage as people are waking in the morning and as night time progresses. Assuming the previous is true (which makes sense for average use activity) this data also shows that there is a bias in the comments from the US, since seeing relatively equal bars would indicate equal usage worldwide at respective local peak times. An interesting direction to take this data analysis further as we work on our project will be to correlate the length of the comment (and/or amount of comments) to the age of the user account on reddit to see if there is a relationship between how much a user writes as their time on reddit increases.
+
+
+```{r}
+df$time <- as.POSIXct(df$created_utc,origin="1970-01-01",tz="UTC")
+df$hour <- as.numeric(str_sub(df$time,12,13))
+ggplot(df)+aes(x=hour,fill="red")+geom_bar()+
+theme(legend.position = "none")+
+labs(title="Variation in comment activity over time (12/01/2017)", x = "Hour of day",  y = "Number of comments")
+```
+
