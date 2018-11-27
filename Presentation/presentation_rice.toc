@@ -1,12 +1,13 @@
 \babel@toc {english}{}
 \beamer@sectionintoc {1}{Background}{3}{0}{1}
 \beamer@subsectionintoc {1}{1}{Reddit}{3}{0}{1}
-\beamer@subsectionintoc {1}{2}{Memes}{9}{0}{1}
-\beamer@subsectionintoc {1}{3}{Motivation and Objectives}{10}{0}{1}
-\beamer@subsectionintoc {1}{4}{Study Overview}{11}{0}{1}
-\beamer@sectionintoc {2}{Objectives}{12}{0}{2}
-\beamer@subsectionintoc {2}{1}{TITLE}{12}{0}{2}
-\beamer@sectionintoc {3}{Results}{16}{0}{3}
-\beamer@subsectionintoc {3}{1}{Figure}{16}{0}{3}
-\beamer@sectionintoc {4}{Conclusion}{17}{0}{4}
-\beamer@subsectionintoc {4}{1}{SUBSECTION NAME}{17}{0}{4}
+\beamer@subsectionintoc {1}{2}{Summary Statistics}{6}{0}{1}
+\beamer@sectionintoc {2}{Objectives}{10}{0}{2}
+\beamer@subsectionintoc {2}{1}{Motivation}{10}{0}{2}
+\beamer@subsectionintoc {2}{2}{Objectives}{11}{0}{2}
+\beamer@sectionintoc {3}{Results}{14}{0}{3}
+\beamer@subsectionintoc {3}{1}{Comment Activity}{14}{0}{3}
+\beamer@subsectionintoc {3}{2}{Subscriber and Comment Counts}{21}{0}{3}
+\beamer@subsectionintoc {3}{3}{Danielle Meme}{27}{0}{3}
+\beamer@subsectionintoc {3}{4}{The Killer Plot}{28}{0}{3}
+\beamer@sectionintoc {4}{Conclusion}{37}{0}{4}
