@@ -1,0 +1,23 @@
+1. Data
+    1. 6 month data
+    2. 40GB of data for each month 
+    3. 70million rows with 12 columns for each month
+    4. 420 million rows with 12 columns with 240GB in total
+2. Server
+    1. Established a private server to deal with big amount of data
+    2. Mysql was used
+3. Conversion
+    1. Convert JSON file into SQL Database
+        1. Our own code required because there were no free softwares to deal with 40GB of data
+4. Query
+    1. Due to the amount of size it was impossible to pull data into RStudio and process them
+    2. To reduce size of the table, new table was restricted to contain only top 100 highest number counting subreddits. 
+    3. Created new table on SQL Database to pull out 4 columns that we needed
+    4. It takes forever if we query the database right away, we had to use numerical ID to make it faster
+        1. Without numerical ID confinement, it takes forever
+        2. With numerical ID, it takes 20minutes to process whole month data
+5. Correlation
+    1. Indicate how much subreddits are correlated to each other
+        1. Based on how many authors overlap each other in the subreddits
+        2. Taken into account how big each subreddit is
+        3. Overlaping numbers of Authors/(Number count of subreddit1+Number count of subreddit2)
