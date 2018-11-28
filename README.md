@@ -1,7 +1,2 @@
-# STAT_605_Project
-TEST
-<<<<<<< HEAD
-steven test
-=======
-Test
+https://www.overleaf.com/project/5bfdf4e4f5fe236ca4ad0fd4
 
