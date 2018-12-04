@@ -1,0 +1,301 @@
+---
+title: "Reddit Project Workflow"
+author: "James Chen"
+date: "October 25, 2018"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Importing JSON into database
+
+### Making function to apply stream_in for importing data into a SQLite table
+
+```{r}
+library(jsonlite)
+library(RSQLite)
+
+library(dplyr)
+
+redditjsondump <- function(inputconn,exportconn,tablename,referencetab=NULL,referencecol=NULL,
+                           pagesize=5000,overwrite=FALSE,append=FALSE){
+  if((overwrite&&append) == TRUE){
+    stop("Cannot use both overwrite and append at the same time!")
+  }
+
+  #deleting table if it previously exists and overwrite is enabled
+  #throwing error if neither append nor overwrite is enabled and the table already exists
+  if(dbExistsTable(exportconn,tablename)){
+    if(overwrite==TRUE){
+      dbRemoveTable(exportconn,tablename)
+    }else if(append==FALSE){
+      stop("Table already exists!")
+    }
+  }
+  
+  exportfun <- function(df){
+    newdf <- df[,c("author","body","created_utc","id","parent_id","link_id",
+                   "subreddit","subreddit_id","score","controversiality",
+                   "distinguished","edited")]
+    if(is.null(referencetab)==FALSE){
+      newdf <- semi_join(newdf,referencetab,by=referencecol)
+    }
+    dbWriteTable(exportconn,tablename,newdf,append = TRUE,overwrite=FALSE,pagesize=pagesize) 
+  }
+  
+  #streaming in json and exporting data to table using exportfunc
+  stream_in(inputconn,handler=exportfun,pagesize = pagesize)
+
+}
+
+```
+
+
+###Test run with sample
+```{r}
+
+name<-paste0("D:\RDATA\RC_2017-12-01")
+infile <-  file(name)
+dcon <- dbConnect(SQLite(), dbname = "reddit4.db")
+
+# Original script (converted into function)
+#
+#   exportfuncX <- function(df){
+#     dbWriteTable(dcon,"newsamp",df,append = TRUE) 
+#   }
+# 
+# stream_in(infile,handler=exportfuncX)
+
+#now with full function:
+
+jsondump(infile,dcon,"newsamp2",overwrite=TRUE,pagesize = 100)
+
+dbGetQuery(dcon,"select count(*) from newsamp2;")
+
+dbDisconnect(dcon)
+```
+
+###Running this on large JSON file
+
+
+```{r}
+list<-read.csv("2017_Jan_MEME_1.csv", stringsAsFactors=FALSE)
+
+for(num in c("03","04","05")){
+name<-paste0("RC_2017-",num)
+infile <-  file(name)
+dcon <- dbConnect(SQLite(), dbname = "reddit2.db")
+nwname<-paste0("RC17_",num)
+redditjsondump(infile,dcon,nwname,overwrite=TRUE,pagesize = 100000,referencetab=list,referencecol="subreddit")
+dbDisconnect(dcon)
+}
+
+
+#Checking first ten lines of data (wondering why column missing error shows up if table already exists)
+temp <- readLines(infile,n=10)
+temp_df <- stream_in(textConnection(temp))
+dbDisconnect(dcon)
+```
+
+
+
+```{r}
+for(num in c("01","02","03","04","05","06")){
+  
+name<-paste0("D:/RDATA/RS_2017-", num)
+infile <-  file(name)
+dcon <- dbConnect(SQLite(), dbname = "D:/RDATA/project.db")
+nwname<-paste0("RS17_", num)
+jsondump(infile,dcon,nwname,overwrite=TRUE,pagesize = 5000)
+}
+dbDisconnect(dcon)
+```
+##Subsettting data
+
+
+###Rebuilding top X subreddits tables to include subreddit_id
+
+####Generating top 10000 subreddits table
+
+```{r}
+if(dbExistsTable(dcon,"subreddits10000")){
+  dbRemoveTable(dcon,"subreddits10000")
+}
+dbSendQuery(dcon,"CREATE TABLE subreddits10000 AS
+            SELECT subredditname, numberofsubscribers, redditbase36id as subreddit_id
+            FROM subreddits_basic
+            WHERE numberofsubscribers !='None'
+            ORDER BY numberofsubscribers DESC
+            LIMIT 10000;")
+```
+
+####Generating top 1000 subreddits table
+
+```{r}
+if(dbExistsTable(dcon,"subreddits1000")){
+  dbRemoveTable(dcon,"subreddits1000")
+}
+dbSendQuery(dcon,"CREATE TABLE subreddits1000 AS
+            SELECT subredditname, numberofsubscribers, redditbase36id as subreddit_id
+            FROM subreddits_basic
+            WHERE numberofsubscribers !='None'
+            ORDER BY numberofsubscribers DESC
+            LIMIT 1000;")
+```
+
+####Generating top 100 subreddits table
+
+```{r}
+if(dbExistsTable(dcon,"subreddits100")){
+  dbRemoveTable(dcon,"subreddits100")
+}
+dbSendQuery(dcon,"CREATE TABLE subreddits100 AS
+            SELECT subredditname, numberofsubscribers, redditbase36id as subreddit_id
+            FROM subreddits_basic
+            WHERE numberofsubscribers !='None'
+            ORDER BY numberofsubscribers DESC
+            LIMIT 100;")
+```
+
+
+###Checking how filtering top X subreddits affects size of comments table
+
+
+FOr reference, note that there are 3057023 comments in the initial file
+```{r}
+dbGetQuery(dcon,"SELECT count(*) FROM RC17_12;")
+```
+
+####Top 10000 subreddits
+
+Turns out top 10000 contains almost all comments
+
+```{r}
+if(dbExistsTable(dcon,"comments10000")){
+  dbRemoveTable(dcon,"comments10000")
+}
+dbSendQuery(dcon, "CREATE TABLE comments10000 AS
+                      SELECT author, score, distinguished,link_id,parent_id,a.subreddit_id,body
+                      FROM RC17_12 as a INNER JOIN subreddits10000 as b ON a.subreddit_id=b.subreddit_id;"
+)
+
+dbGetQuery(dcon,"SELECT count(*) FROM comments10000")
+  
+```
+
+
+
+####Top 1000
+
+Top 1000 subreddits still contains over half of all comments
+```{r}
+if(dbExistsTable(dcon,"comments1000")){
+  dbRemoveTable(dcon,"comments1000")
+}
+dbSendQuery(dcon, "CREATE TABLE comments1000 AS
+                      SELECT author, score, distinguished,link_id,parent_id,a.subreddit_id,body
+                      FROM RC17_12 as a INNER JOIN subreddits1000 as b ON a.subreddit_id=b.subreddit_id;"
+)
+
+dbGetQuery(dcon,"SELECT count(*) FROM comments1000")
+  
+```
+
+####Top 100
+
+Top 100 subreddits contains just over a quarter of all comments
+```{r}
+if(dbExistsTable(dcon,"comments100")){
+  dbRemoveTable(dcon,"comments100")
+}
+dbSendQuery(dcon, "CREATE TABLE comments100 AS
+                      SELECT author, score, distinguished,link_id,parent_id,a.subreddit_id,body
+                      FROM RC17_12 as a INNER JOIN subreddits100 as b ON a.subreddit_id=b.subreddit_id;"
+)
+
+dbGetQuery(dcon,"SELECT count(*) FROM comments100")
+  
+```
+
+##Loading in 2017 January comments:
+
+
+Loading a full month of comment data, and timing it. Note: this took over two and a half hours to import, so make sure the code is working with a smaller sample first before running this!
+```{r}
+
+infile <-  file("D:\\Rice\\Fall 2018\\STAT 605\\Project\\Reddit\\RC_2017-04.json")
+dcon <- dbConnect(SQLite(), dbname = "D:\\Rice\\Fall 2018\\STAT 605\\Project\\Reddit\\reddit_db.db")
+
+tt <- proc.time()
+
+jsondump(infile,dcon,"RC17_04",overwrite=TRUE,pagesize = 100000)
+
+(timed <- proc.time()-tt)
+
+dbGetQuery(dcon,"select count(*) from RC17_04;")
+
+dbDisconnect(dcon)
+```
+   user  system elapsed 
+7045.97  420.61 9124.50 
+
+
+
+
+
+##Summary
+
+Subsetting our data to top 100 subreddits will filter out nearly 3/4 of comments. We should keep in mind that a full day of data is just under 1 GB when loaded into our database. A month of data is 20 GB. With this subsetting, we can pack 3 months into under 15 GB, as long as we drop the original tables. The bigger issue is the amount of time it takes to run a query. Even a count query took 
+
+However, running this code will take a couple of hours I think.
+
+
+
+
+##Legacy code
+
+
+###Old version of jsondump with user warning for overwriting
+```{r}
+library(jsonlite)
+library(RSQLite)
+jsondump <- function(inputconn,exportconn,tablename,pagesize=5000,overwrite1=FALSE,append1=FALSE,warnuser=TRUE){
+  if((overwrite1&&append1) == TRUE){
+    stop("Cannot use both overwrite and append at the same time!")
+  }
+  
+  # #checking for user approval if overwrite is enabled
+  # if(warnuser&&overwrite){
+  #   cat("Running this will overwrite the table",tablename,"if it exists.")
+  #   approval <- readline(prompt="Are you sure you wish to proceed? (y/n)")
+  # }else{
+  #   approval <-  'y'
+  # }
+  # if(approval=='y'){
+    
+    #deleting table if it previously exists and overwrite is enabled
+    #throwing error if neither append nor overwrite is enabled and the table already exists
+    if(dbExistsTable(exportconn,tablename)){
+      if(overwrite1==TRUE){
+        dbRemoveTable(exportconn,tablename)
+      }else if(append1==FALSE){
+        stop("Table already exists!")
+      }
+    }
+    
+    #now defining function to export data to table for each group of fetched records    
+    exportfunc <- function(df){
+      #writing data to table
+      dbWriteTable(exportconn,tablename,df,append = TRUE,pagesize=pagesize) 
+    }
+    stream_in(inputconn,handler=exportfunc)
+  # }else{
+  #   print("Quit function")
+  # }
+}
+
+```
+
+

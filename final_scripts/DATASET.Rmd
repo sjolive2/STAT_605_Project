@@ -1,0 +1,730 @@
+---
+title: "Dataset"
+author: "Hoik Jang"
+date: '2018 11 20 '
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+#install.packages("RMySQL")
+library(RSQLite)
+library(RMySQL)
+library(plyr)
+library(dplyr)
+library(stringr)
+dcon <- dbConnect(SQLite(), dbname ="D:/RDATA/reddit2.db")
+```
+
+##Making Tables on SQL Database pulling out required columns and converting UTC time into days.
+```{r}
+#dbClearResult(res)
+maxnum1<-1483228799
+
+# query <- paste0("
+# DROP TABLE subdata06
+# ;")
+# res<-dbSendQuery(dcon, query)
+# dbClearResult(res)
+
+for(i in c("01","02","03","04","05","06")){
+query <- paste0("
+CREATE TABLE subdata",as.character(i)," AS
+SELECT subreddit,author, body, strftime('%d',created_utc,'unixepoch') as day
+FROM RC17_",as.character(i),"
+WHERE created_utc>",maxnum1,"
+;")
+dbSendQuery(dcon, query)
+
+query <- paste0("
+SELECT subreddit, count(*) as count
+FROM subdata",as.character(i),"
+GROUP BY subreddit
+ORDER BY count DESC
+;")
+res<-dbSendQuery(dcon, query)
+listsub<-dbFetch(res, -1)
+dbClearResult(res)
+filename<-paste0("D:/RDATA/2017_",i,"_List.csv")
+write.csv(listsub, file =filename )
+}
+```
+
+
+##Count how many times each meme appeared on comment from each day of each month,
+```{r}
+######################################################################################################
+
+months<-c("01")
+for(j in months)
+{
+  filenamemonth<-paste0("D:/RDATA/MemeData/2017_",j,"_List.csv")
+  list<-read.csv(file = filenamemonth)
+  if(j=="02")
+  days <- formatC(1:28, digits=1, flag='0')
+  if(j=="01"||j=="03"||j=="05")
+  days <- formatC(1:31, digits=1, flag='0')
+  if(j=="04"||j=="06")
+  days <- formatC(1:30, digits=1, flag='0')
+  # days<- formatC(1, digits=1, flag='0')
+  # list<-data.frame(number=1:10)
+  for(i in days)
+  {
+    query <- paste0("SELECT subreddit, body
+FROM subdata",as.character(j),"
+WHERE day='",i,"'
+;")
+    res<-dbSendQuery(dcon, query)
+    data<-dbFetch(res, -1)
+    dbClearResult(res)
+    newdf <-transmute(data,subreddit,
+                      covfefe = str_detect(data$body,("[Cc]ovfefe")), #June
+                      # try str_detect(df$body,ignore.case("covfefe"))
+                      metoo = str_detect(data$body,"[Mm](e ?Too|e ?too)"), #October
+                      RickMorty = str_detect(data$body,"you have to have a very high IQ"),#July
+                      Danielle = str_detect(data$body,"([Cc]ash ?[mM]e|[Hh][Oo][Ww] ?[Bb][oO][Ww]?[Uu]?[Tt]?)"),      
+                      #January
+                      TrumpTrade = str_detect(data$body,"has been the worst trade deal"), #March/April
+                      LuckyLuciano = str_detect(data$body,"had to do it to '?em"),#January
+                      Despacito = str_detect(data$body,"[Dd]espacito"),#July
+                      Dankstorm = str_detect(data$body,"([Dd]arude|[Ss]arude)"),#any month
+                      RickRoll = str_detect(data$body,"h?t?t?p?s?:?/?/?www.youtube.com/watch?v=dQw4w9WgXcQ")
+                      #any month
+    )
+    Danielle<-as.data.frame(table(data$subreddit[newdf$Danielle]))
+    LuckyLuciano<-as.data.frame(table(data$subreddit[newdf$LuckyLuciano]))
+    Dankstorm<-as.data.frame(table(data$subreddit[newdf$Dankstorm]))
+    covfefe<-as.data.frame(table(data$subreddit[newdf$covfefe]))
+    metoo<-as.data.frame(table(data$subreddit[newdf$metoo]))
+    RickMorty<-as.data.frame(table(data$subreddit[newdf$RickMorty]))
+    TrumpTrade<-as.data.frame(table(data$subreddit[newdf$TrumpTrade]))
+    Despacito<-as.data.frame(table(data$subreddit[newdf$Despacito]))
+    RickRoll<-as.data.frame(table(data$subreddit[newdf$RickRoll]))
+    
+    list$Danielle<-0
+    list$LuckyLuciano<-0
+    list$Dankstorm<-0
+    list$RickRoll<-0
+    list$covfefe<-0
+    list$metoo<-0
+    list$RickMorty<-0
+    list$TrumpTrade<-0
+    list$Despacito<-0
+    
+    ##Code Below is used to determine from which subreddits each of memes appeared first.##
+    # try({list$Danielle<-head(data$subreddit[newdf$Danielle],n=10L)}, silent = TRUE)
+    # try({list$LuckyLuciano<-head(data$subreddit[newdf$LuckyLuciano],n=10L)}, silent = TRUE)
+    # try({list$Dankstorm<-head(data$subreddit[newdf$Dankstorm],n=10L)}, silent = TRUE)
+    # try({list$RickRoll<-head(data$subreddit[newdf$RickRoll],n=10L)}, silent = TRUE)
+    # try({list$covfefe<-head(data$subreddit[newdf$covfefe],n=10L)}, silent = TRUE)
+    # try({list$metoo<-head(data$subreddit[newdf$metoo],n=10L)}, silent = TRUE)
+    # try({list$RickMorty<-head(data$subreddit[newdf$RickMorty],n=10L)}, silent = TRUE)
+    # try({list$TrumpTrade<-head(data$subreddit[newdf$TrumpTrade],n=10L)}, silent = TRUE)
+    # try({list$Despacito<-head(data$subreddit[newdf$Despacito],n=10L)}, silent = TRUE)
+    #######################################################################################
+    
+    for (k in list$subreddit){
+      try({
+        list$Danielle[[which(list$subreddit==k)]]<-list$Danielle[[which(list$subreddit==k)]]+
+        as.numeric(Danielle$Freq[[which(Danielle$Var1==k)]])}, silent = TRUE)
+      try({
+        list$LuckyLuciano[[which(list$subreddit==k)]]<-list$LuckyLuciano[[which(list$subreddit==k)]]+
+        as.numeric(LuckyLuciano$Freq[[which(LuckyLuciano$Var1==k)]])}, silent = TRUE)
+      try({
+        list$Dankstorm[[which(list$subreddit==k)]]<-list$Dankstorm[[which(list$subreddit==k)]]+
+        as.numeric(Dankstorm$Freq[[which(Dankstorm$Var1==k)]])}, silent = TRUE)
+      try({
+        list$covfefe[[which(list$subreddit==k)]]<-list$covfefe[[which(list$subreddit==k)]]+
+        as.numeric(covfefe$Freq[[which(covfefe$Var1==k)]])}, silent = TRUE)
+      try({
+        list$metoo[[which(list$subreddit==k)]]<-list$metoo[[which(list$subreddit==k)]]+
+        as.numeric(metoo$Freq[[which(metoo$Var1==k)]])}, silent = TRUE)
+      try({
+        list$RickMorty[[which(list$subreddit==k)]]<-list$RickMorty[[which(list$subreddit==k)]]+
+        as.numeric(RickMorty$Freq[[which(RickMorty$Var1==k)]])}, silent = TRUE)
+      try({
+        list$TrumpTrade[[which(list$subreddit==k)]]<-list$TrumpTrade[[which(list$subreddit==k)]]+
+        as.numeric(TrumpTrade$Freq[[which(TrumpTrade$Var1==k)]])}, silent = TRUE)
+      try({
+        list$Despacito[[which(list$subreddit==k)]]<-list$Despacito[[which(list$subreddit==k)]]+
+        as.numeric(Despacito$Freq[[which(Despacito$Var1==k)]])}, silent = TRUE)
+      try({
+        list$RickRoll[[which(list$subreddit==k)]]<-list$RickRoll[[which(list$subreddit==k)]]+
+        as.numeric(RickRoll$Freq[[which(RickRoll$Var1==k)]])}, silent = TRUE)
+    }
+    filename<-paste0("D:/RDATA/MemeData/2017_",j,"_List_",i,".csv")
+    write.csv(list, file = filename)
+  }
+  
+}
+#################################################################################week1
+
+```
+
+
+```{r}
+list<-read.csv("D:/RDATA/2017_Jan_MEME_1.csv")
+list$corr_num_MMA<-0
+list$corr_denom_MMA <- 0
+for (i in list$subreddit){
+query<-paste0("SELECT count(*) as count FROM (SELECT author
+FROM subdata01
+WHERE subreddit='MMA') as a
+INNER JOIN
+(SELECT author
+FROM subdata01
+WHERE subreddit='",i,"') as b
+ON a.author=b.author 
+;'")
+res<-dbSendQuery(dcon, query)
+count<-dbFetch(res, -1)
+dbClearResult(res)
+num<-as.numeric(which(list$subreddit==i))
+list$corr_num_MMA[[num]]<-log10(as.numeric(count))
+list$corr_denom_MMA[[num]]<-(log10(list$count[[num]])+log10(list$count[[which(list$subreddit=='MMA')]]))
+}
+
+write.csv(list, file = "D:/RDATA/2017_Jan_MEME_2.csv")
+
+list<-read.csv("D:/RDATA/2017_Jan_MEME_2.csv")
+list$corr_num_cars<-0
+list$corr_denom_cars <- 0
+for (i in list$subreddit){
+query<-paste0("SELECT count(*) as count FROM (SELECT author
+FROM subdata01
+WHERE subreddit='cars') as a
+INNER JOIN
+(SELECT author
+FROM subdata01
+WHERE subreddit='",i,"') as b
+ON a.author=b.author 
+;'")
+res<-dbSendQuery(dcon, query)
+count<-dbFetch(res, -1)
+dbClearResult(res)
+num<-as.numeric(which(list$subreddit==i))
+list$corr_num_cars[[num]]<-log10(as.numeric(count))
+list$corr_denom_cars[[num]]<-(log10(list$count[[num]])+log10(list$count[[which(list$subreddit=='cars')]]))
+}
+
+write.csv(list, file = "D:/RDATA/2017_Jan_MEME_3.csv")
+
+# list<-read.csv("D:/RDATA/2017_Jan_MEME_3.csv")
+# list$corr_num_AskReddit<-0
+# list$corr_denom_AskReddit <- 0
+# for (i in list$subreddit){
+# query<-paste0("SELECT count(*) as count FROM (SELECT author
+# FROM subdata01
+# WHERE subreddit='AskReddit') as a
+# INNER JOIN
+# (SELECT author
+# FROM subdata01
+# WHERE subreddit='",i,"') as b
+# ON a.author=b.author
+# ;'")
+# res<-dbSendQuery(dcon, query)
+# count<-dbFetch(res, -1)
+# dbClearResult(res)
+# num<-as.numeric(which(list$subreddit==i))
+# list$corr_num_AskReddit[[num]]<-log10(as.numeric(count))
+# list$corr_denom_AskReddit[[num]]<-(log10(list$count[[num]])+log10(list$count[[which(list$subreddit=='AskReddit')]]))
+# }
+
+write.csv(list, file = "D:/RDATA/2017_Jan_MEME_4.csv")
+
+list<-read.csv("D:/RDATA/2017_Jan_MEME_3.csv")
+list$corr_num_Warframe<-0
+list$corr_denom_Warframe <- 0
+for (i in list$subreddit){
+query<-paste0("SELECT count(*) as count FROM (SELECT author
+FROM subdata01
+WHERE subreddit='Warframe') as a
+INNER JOIN
+(SELECT author
+FROM subdata01
+WHERE subreddit='",i,"') as b
+ON a.author=b.author 
+;'")
+res<-dbSendQuery(dcon, query)
+count<-dbFetch(res, -1)
+dbClearResult(res)
+num<-as.numeric(which(list$subreddit==i))
+list$corr_num_Warframe[[num]]<-log10(as.numeric(count))
+list$corr_denom_Warframe[[num]]<-(log10(list$count[[num]])+log10(list$count[[which(list$subreddit=='Warframe')]]))
+}
+
+write.csv(list, file = "D:/RDATA/2017_Jan_MEME_6.csv")
+
+list<-read.csv("D:/RDATA/2017_Jan_MEME_6.csv")
+list$corr_num_videos<-0
+list$corr_denom_videos <- 0
+for (i in list$subreddit){
+query<-paste0("SELECT count(*) as count FROM (SELECT author
+FROM subdata01
+WHERE subreddit='videos') as a
+INNER JOIN
+(SELECT author
+FROM subdata01
+WHERE subreddit='",i,"') as b
+ON a.author=b.author 
+;'")
+res<-dbSendQuery(dcon, query)
+count<-dbFetch(res, -1)
+dbClearResult(res)
+num<-as.numeric(which(list$subreddit==i))
+list$corr_num_videos[[num]]<-log10(as.numeric(count))
+list$corr_denom_videos[[num]]<-(list$count[[num]]+list$count[[which(list$subreddit=='videos')]])
+}
+
+write.csv(list, file = "D:/RDATA/2017_Jan_MEME_7.csv")
+
+
+```
+##Based on the subreddits that had memes first from above code, find correlation of each selected subreddit with other 100 subreddits
+```{r}
+
+
+list<-read.csv("D:/RDATA/MemeData/2017_Jan_Correlation.csv")
+list$corr_num_hockey<-0
+list$corr_denom_hockey<- 0
+list$corr_num_conspiracy<-0
+list$corr_denom_conspiracy<-0
+list$corr_num_leagueoflegends<-0
+list$corr_denom_leagueoflegends<-0	
+list$corr_num_Overwatch<-0
+list$corr_denom_Overwatch	<-0
+list$corr_num_gaming<-0
+list$corr_denom_gaming<-0
+list$corr_num_nba<-0
+list$corr_denom_nba<-0
+list$corr_num_RocketLeagueExchange<-0
+list$corr_denom_RocketLeagueExchange<-0
+list$corr_num_politics<-0
+list$corr_denom_politics<-0
+list$corr_num_Cricket<-0
+list$corr_denom_Cricket<-0
+list$corr_num_RoastMe<-0
+list$corr_denom_RoastMe<-0
+list$corr_num_CollegeBasketball<-0
+list$corr_denom_CollegeBasketball<-0
+list$corr_num_pathofexile<-0
+list$corr_denom_pathofexile<-0
+list$corr_num_nfl<-0
+list$corr_denom_nfl<-0
+list$corr_num_wow<-0
+list$corr_denom_wow<-0
+list$corr_num_gonewild<-0
+list$corr_denom_gonewild<-0
+list$corr_num_Music<-0
+list$corr_denom_Music<-0
+list$corr_num_heroesofthestorm<-0
+list$corr_denom_heroesofthestorm<-0
+list$corr_num_The_Donald<-0
+list$corr_denom_The_Donald<-0
+list$corr_num_WTF<-0
+list$corr_denom_WTF<-0
+list$corr_num_funny<-0
+list$corr_denom_funny<-0
+list$corr_num_relationships<-0
+list$corr_denom_relationships<-0
+list$corr_num_MMA<-0
+list$corr_denom_MMA<-0
+list$corr_num_europe<-0
+list$corr_denom_europe<-0
+
+for (i in list$subreddit){
+query<-paste0("SELECT count(*) as count FROM (SELECT author
+FROM subdata01
+WHERE subreddit='hockey') as a
+INNER JOIN
+(SELECT author
+FROM subdata01
+WHERE subreddit='",i,"') as b
+ON a.author=b.author 
+;'")
+res<-dbSendQuery(dcon, query)
+count<-dbFetch(res, -1)
+dbClearResult(res)
+num<-as.numeric(which(list$subreddit==i))
+list$corr_num_hockey[[num]]<-log10(as.numeric(count)+1)
+list$corr_denom_hockey[[num]]<-log10(list$count[[num]]+1)+log10(list$count[[which(list$subreddit=='hockey')]]+1)
+}
+
+for (i in list$subreddit){
+query<-paste0("SELECT count(*) as count FROM (SELECT author
+FROM subdata01
+WHERE subreddit='Overwatch') as a
+INNER JOIN
+(SELECT author
+FROM subdata01
+WHERE subreddit='",i,"') as b
+ON a.author=b.author 
+;'")
+res<-dbSendQuery(dcon, query)
+count<-dbFetch(res, -1)
+dbClearResult(res)
+num<-as.numeric(which(list$subreddit==i))
+list$corr_num_Overwatch[[num]]<-log10(as.numeric(count)+1)
+list$corr_denom_Overwatch[[num]]<-log10(list$count[[num]]+1)+log10(list$count[[which(list$subreddit=='Overwatch')]]+1)
+}
+for (i in list$subreddit){
+query<-paste0("SELECT count(*) as count FROM (SELECT author
+FROM subdata01
+WHERE subreddit='leagueoflegends') as a
+INNER JOIN
+(SELECT author
+FROM subdata01
+WHERE subreddit='",i,"') as b
+ON a.author=b.author 
+;'")
+res<-dbSendQuery(dcon, query)
+count<-dbFetch(res, -1)
+dbClearResult(res)
+num<-as.numeric(which(list$subreddit==i))
+list$corr_num_leagueoflegends<-log10(as.numeric(count)+1)
+list$corr_denom_leagueoflegends<-log10(list$count[[num]]+1)+log10(list$count[[which(list$subreddit=='leagueoflegends')]]+1)
+}
+for (i in list$subreddit){
+query<-paste0("SELECT count(*) as count FROM (SELECT author
+FROM subdata01
+WHERE subreddit='gaming') as a
+INNER JOIN
+(SELECT author
+FROM subdata01
+WHERE subreddit='",i,"') as b
+ON a.author=b.author 
+;'")
+res<-dbSendQuery(dcon, query)
+count<-dbFetch(res, -1)
+dbClearResult(res)
+num<-as.numeric(which(list$subreddit==i))
+list$corr_num_gaming[[num]]<-log10(as.numeric(count)+1)
+list$corr_denom_gaming[[num]]<-log10(list$count[[num]]+1)+log10(list$count[[which(list$subreddit=='gaming')]]+1)
+
+}
+for (i in list$subreddit){
+query<-paste0("SELECT count(*) as count FROM (SELECT author
+FROM subdata01
+WHERE subreddit='nba') as a
+INNER JOIN
+(SELECT author
+FROM subdata01
+WHERE subreddit='",i,"') as b
+ON a.author=b.author 
+;'")
+res<-dbSendQuery(dcon, query)
+count<-dbFetch(res, -1)
+dbClearResult(res)
+num<-as.numeric(which(list$subreddit==i))
+list$corr_num_nba[[num]]<-log10(as.numeric(count)+1)
+list$corr_denom_nba[[num]]<-log10(list$count[[num]]+1)+log10(list$count[[which(list$subreddit=='nba')]]+1)
+}
+for (i in list$subreddit){
+query<-paste0("SELECT count(*) as count FROM (SELECT author
+FROM subdata01
+WHERE subreddit='RocketLeagueExchange') as a
+INNER JOIN
+(SELECT author
+FROM subdata01
+WHERE subreddit='",i,"') as b
+ON a.author=b.author 
+;'")
+res<-dbSendQuery(dcon, query)
+count<-dbFetch(res, -1)
+dbClearResult(res)
+num<-as.numeric(which(list$subreddit==i))
+list$corr_num_RocketLeagueExchange[[num]]<-log10(as.numeric(count)+1)
+list$corr_denom_RocketLeagueExchange[[num]]<-log10(list$count[[num]]+1)+log10(list$count[[which(list$subreddit=='RocketLeagueExchange')]]+1)
+}
+for (i in list$subreddit){
+query<-paste0("SELECT count(*) as count FROM (SELECT author
+FROM subdata01
+WHERE subreddit='politics' AND day='01') as a
+INNER JOIN
+(SELECT author
+FROM subdata01
+WHERE subreddit='",i,"') as b
+ON a.author=b.author 
+;'")
+res<-dbSendQuery(dcon, query)
+count<-dbFetch(res, -1)
+dbClearResult(res)
+num<-as.numeric(which(list$subreddit==i))
+list$corr_num_politics[[num]]<-log10(as.numeric(count)+1)
+list$corr_denom_politics[[num]]<-log10(list$count[[num]]+1)+log10(list$count[[which(list$subreddit=='politics')]]+1)
+}
+for (i in list$subreddit){
+query<-paste0("SELECT count(*) as count FROM (SELECT author
+FROM subdata01
+WHERE subreddit='Cricket') as a
+INNER JOIN
+(SELECT author
+FROM subdata01
+WHERE subreddit='",i,"') as b
+ON a.author=b.author 
+;'")
+res<-dbSendQuery(dcon, query)
+count<-dbFetch(res, -1)
+dbClearResult(res)
+num<-as.numeric(which(list$subreddit==i))
+list$corr_num_Cricket[[num]]<-log10(as.numeric(count)+1)
+list$corr_denom_Cricket[[num]]<-log10(list$count[[num]]+1)+log10(list$count[[which(list$subreddit=='Cricket')]]+1)
+}
+for (i in list$subreddit){
+query<-paste0("SELECT count(*) as count FROM (SELECT author
+FROM subdata01
+WHERE subreddit='RoastMe') as a
+INNER JOIN
+(SELECT author
+FROM subdata01
+WHERE subreddit='",i,"') as b
+ON a.author=b.author 
+;'")
+res<-dbSendQuery(dcon, query)
+count<-dbFetch(res, -1)
+dbClearResult(res)
+num<-as.numeric(which(list$subreddit==i))
+list$corr_num_RoastMe[[num]]<-log10(as.numeric(count)+1)
+list$corr_denom_RoastMe[[num]]<-log10(list$count[[num]]+1)+log10(list$count[[which(list$subreddit=='RoastMe')]]+1)
+}
+for (i in list$subreddit){
+query<-paste0("SELECT count(*) as count FROM (SELECT author
+FROM subdata01
+WHERE subreddit='CollegeBasketball') as a
+INNER JOIN
+(SELECT author
+FROM subdata01
+WHERE subreddit='",i,"') as b
+ON a.author=b.author 
+;'")
+res<-dbSendQuery(dcon, query)
+count<-dbFetch(res, -1)
+dbClearResult(res)
+num<-as.numeric(which(list$subreddit==i))
+list$corr_num_CollegeBasketball[[num]]<-log10(as.numeric(count)+1)
+list$corr_denom_CollegeBasketball[[num]]<-log10(list$count[[num]]+1)+log10(list$count[[which(list$subreddit=='CollegeBasketball')]]+1)
+}
+for (i in list$subreddit){
+query<-paste0("SELECT count(*) as count FROM (SELECT author
+FROM subdata01
+WHERE subreddit='pathofexile') as a
+INNER JOIN
+(SELECT author
+FROM subdata01
+WHERE subreddit='",i,"') as b
+ON a.author=b.author 
+;'")
+res<-dbSendQuery(dcon, query)
+count<-dbFetch(res, -1)
+dbClearResult(res)
+num<-as.numeric(which(list$subreddit==i))
+list$corr_num_pathofexile[[num]]<-log10(as.numeric(count)+1)
+list$corr_denom_pathofexile[[num]]<-log10(list$count[[num]]+1)+log10(list$count[[which(list$subreddit=='pathofexile')]]+1)
+}
+for (i in list$subreddit){
+query<-paste0("SELECT count(*) as count FROM (SELECT author
+FROM subdata01
+WHERE subreddit='nfl') as a
+INNER JOIN
+(SELECT author
+FROM subdata01
+WHERE subreddit='",i,"') as b
+ON a.author=b.author 
+;'")
+res<-dbSendQuery(dcon, query)
+count<-dbFetch(res, -1)
+dbClearResult(res)
+num<-as.numeric(which(list$subreddit==i))
+list$corr_num_nfl[[num]]<-log10(as.numeric(count)+1)
+list$corr_denom_nfl[[num]]<-log10(list$count[[num]]+1)+log10(list$count[[which(list$subreddit=='nfl')]]+1)
+}
+for (i in list$subreddit){
+query<-paste0("SELECT count(*) as count FROM (SELECT author
+FROM subdata01
+WHERE subreddit='wow') as a
+INNER JOIN
+(SELECT author
+FROM subdata01
+WHERE subreddit='",i,"') as b
+ON a.author=b.author 
+;'")
+res<-dbSendQuery(dcon, query)
+count<-dbFetch(res, -1)
+dbClearResult(res)
+num<-as.numeric(which(list$subreddit==i))
+list$corr_num_wow[[num]]<-log10(as.numeric(count)+1)
+list$corr_denom_wow[[num]]<-log10(list$count[[num]]+1)+log10(list$count[[which(list$subreddit=='wow')]]+1)
+}
+for (i in list$subreddit){
+query<-paste0("SELECT count(*) as count FROM (SELECT author
+FROM subdata01
+WHERE subreddit='Music') as a
+INNER JOIN
+(SELECT author
+FROM subdata01
+WHERE subreddit='",i,"') as b
+ON a.author=b.author 
+;'")
+res<-dbSendQuery(dcon, query)
+count<-dbFetch(res, -1)
+dbClearResult(res)
+num<-as.numeric(which(list$subreddit==i))
+list$corr_num_Music[[num]]<-log10(as.numeric(count)+1)
+list$corr_denom_Music[[num]]<-log10(list$count[[num]]+1)+log10(list$count[[which(list$subreddit=='Music')]]+1)
+}
+for (i in list$subreddit){
+query<-paste0("SELECT count(*) as count FROM (SELECT author
+FROM subdata01
+WHERE subreddit='heroesofthestorm') as a
+INNER JOIN
+(SELECT author
+FROM subdata01
+WHERE subreddit='",i,"') as b
+ON a.author=b.author 
+;'")
+res<-dbSendQuery(dcon, query)
+count<-dbFetch(res, -1)
+dbClearResult(res)
+num<-as.numeric(which(list$subreddit==i))
+list$corr_num_heroesofthestorm[[num]]<-log10(as.numeric(count)+1)
+list$corr_denom_heroesofthestorm[[num]]<-log10(list$count[[num]]+1)+log10(list$count[[which(list$subreddit=='heroesofthestorm')]]+1)
+}
+for (i in list$subreddit){
+query<-paste0("SELECT count(*) as count FROM (SELECT author
+FROM subdata01
+WHERE subreddit='The_Donald') as a
+INNER JOIN
+(SELECT author
+FROM subdata01
+WHERE subreddit='",i,"') as b
+ON a.author=b.author 
+;'")
+res<-dbSendQuery(dcon, query)
+count<-dbFetch(res, -1)
+dbClearResult(res)
+num<-as.numeric(which(list$subreddit==i))
+list$corr_num_The_Donald[[num]]<-log10(as.numeric(count)+1)
+list$corr_denom_The_Donald[[num]]<-log10(list$count[[num]]+1)+log10(list$count[[which(list$subreddit=='The_Donald')]]+1)
+}
+for (i in list$subreddit){
+query<-paste0("SELECT count(*) as count FROM (SELECT author
+FROM subdata01
+WHERE subreddit='WTF') as a
+INNER JOIN
+(SELECT author
+FROM subdata01
+WHERE subreddit='",i,"') as b
+ON a.author=b.author 
+;'")
+res<-dbSendQuery(dcon, query)
+count<-dbFetch(res, -1)
+dbClearResult(res)
+num<-as.numeric(which(list$subreddit==i))
+list$corr_num_WTF[[num]]<-log10(as.numeric(count)+1)
+list$corr_denom_WTF[[num]]<-log10(list$count[[num]]+1)+log10(list$count[[which(list$subreddit=='WTF')]]+1)
+}
+for (i in list$subreddit){
+query<-paste0("SELECT count(*) as count FROM (SELECT author
+FROM subdata01
+WHERE subreddit='funny') as a
+INNER JOIN
+(SELECT author
+FROM subdata01
+WHERE subreddit='",i,"') as b
+ON a.author=b.author 
+;'")
+res<-dbSendQuery(dcon, query)
+count<-dbFetch(res, -1)
+dbClearResult(res)
+num<-as.numeric(which(list$subreddit==i))
+list$corr_num_funny[[num]]<-log10(as.numeric(count)+1)
+list$corr_denom_funny[[num]]<-log10(list$count[[num]]+1)+log10(list$count[[which(list$subreddit=='funny')]]+1)
+}
+for (i in list$subreddit){
+query<-paste0("SELECT count(*) as count FROM (SELECT author
+FROM subdata01
+WHERE subreddit='MMA') as a
+INNER JOIN
+(SELECT author
+FROM subdata01
+WHERE subreddit='",i,"') as b
+ON a.author=b.author 
+;'")
+res<-dbSendQuery(dcon, query)
+count<-dbFetch(res, -1)
+dbClearResult(res)
+num<-as.numeric(which(list$subreddit==i))
+list$corr_num_MMA[[num]]<-log10(as.numeric(count)+1)
+list$corr_denom_MMA[[num]]<-log10(list$count[[num]]+1)+log10(list$count[[which(list$subreddit=='MMA')]]+1)
+}
+for (i in list$subreddit){
+query<-paste0("SELECT count(*) as count FROM (SELECT author
+FROM subdata01
+WHERE subreddit='europe' AND day='01') as a
+INNER JOIN
+(SELECT author
+FROM subdata01
+WHERE subreddit='",i,"'  AND day='01') as b
+ON a.author=b.author 
+;'")
+res<-dbSendQuery(dcon, query)
+count<-dbFetch(res, -1)
+dbClearResult(res)
+num<-as.numeric(which(list$subreddit==i))
+list$corr_num_europe[[num]]<-log10(as.numeric(count)+1)
+list$corr_denom_europe[[num]]<-log10(list$count[[num]]+1)+log10(list$count[[which(list$subreddit=='europe')]]+1)
+}
+list
+for (i in list$subreddit){
+query<-paste0("SELECT count(*) as count FROM (SELECT author
+FROM subdata01
+WHERE subreddit='videos') as a
+INNER JOIN
+(SELECT author
+FROM subdata01
+WHERE subreddit='",i,"') as b
+ON a.author=b.author 
+;'")
+res<-dbSendQuery(dcon, query)
+count<-dbFetch(res, -1)
+dbClearResult(res)
+num<-as.numeric(which(list$subreddit==i))
+list$corr_num_videos[[num]]<-log10(as.numeric(count)+1)
+list$corr_denom_videos[[num]]<-log10(list$count[[num]]+1)+log10(list$count[[which(list$subreddit=='videos')]]+1)
+}
+for (i in list$subreddit){
+query<-paste0("SELECT count(*) as count FROM (SELECT author
+FROM subdata01
+WHERE subreddit='Warframe') as a
+INNER JOIN
+(SELECT author
+FROM subdata01
+WHERE subreddit='",i,"') as b
+ON a.author=b.author 
+;'")
+res<-dbSendQuery(dcon, query)
+count<-dbFetch(res, -1)
+dbClearResult(res)
+num<-as.numeric(which(list$subreddit==i))
+list$corr_num_Warframe[[num]]<-log10(as.numeric(count)+1)
+list$corr_denom_Warframe[[num]]<-log10(list$count[[num]]+1)+log10(list$count[[which(list$subreddit=='Warframe')]]+1)
+}
+for (i in list$subreddit){
+query<-paste0("SELECT count(*) as count FROM (SELECT author
+FROM subdata01
+WHERE subreddit='cars') as a
+INNER JOIN
+(SELECT author
+FROM subdata01
+WHERE subreddit='",i,"') as b
+ON a.author=b.author 
+;'")
+res<-dbSendQuery(dcon, query)
+count<-dbFetch(res, -1)
+dbClearResult(res)
+num<-as.numeric(which(list$subreddit==i))
+list$corr_num_cars[[num]]<-log10(as.numeric(count)+1)
+list$corr_denom_cars[[num]]<-log10(list$count[[num]]+1)+log10(list$count[[which(list$subreddit=='cars')]]+1)
+}
+write.csv(list, "D:/RDATA/MemeData/2017_Jan_CorrelationV2.csv")
+```
